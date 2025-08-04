@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeLogic Quest - Lógica Computacional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .game-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%);
+            color: white;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 8px;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+            to { text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 30px rgba(255,255,255,0.6); }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .game-board {
+            display: flex;
+            min-height: 700px;
+        }
+
+        .controls-panel {
+            width: 450px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-right: 3px solid #e9ecef;
+            overflow-y: auto;
+        }
+
+        .world-panel {
+            flex: 1;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .level-info {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            border-left: 5px solid #fff;
+        }
+
+        .level-info h2 {
+            font-size: 1.4em;
+            margin-bottom: 8px;
+        }
+
+        .concept-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin: 5px 3px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #f39c12;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        .commands-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 8px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: #e74c3c;
+        }
+
+        .command-category {
+            margin-bottom: 20px;
+        }
+
+        .category-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .command-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .command-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .command-btn:hover::before {
+            left: 100%;
+        }
+
+        .cmd-basic { background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); }
+        .cmd-conditional { background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%); }
+        .cmd-loop { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); }
+        .cmd-function { background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); }
+
+        .command-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .command-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .program-area {
+            background: #ecf0f1;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 280px;
+            margin-bottom: 20px;
+            border: 3px dashed #bdc3c7;
+            position: relative;
+        }
+
+        .program-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .program-title {
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .complexity-meter {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .complexity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #bdc3c7;
+        }
+
+        .complexity-dot.active {
+            background: #e74c3c;
+        }
+
+        .program-step {
+            background: white;
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid #3498db;
+        }
+
+        .program-step.conditional {
+            border-left-color: #f39c12;
+            background: linear-gradient(90deg, #fff3cd 0%, white 20%);
+        }
+
+        .program-step.loop {
+            border-left-color: #9b59b6;
+            background: linear-gradient(90deg, #f3e5f5 0%, white 20%);
+        }
+
+        .program-step.function {
+            border-left-color: #34495e;
+            background: linear-gradient(90deg, #ecf0f1 0%, white 20%);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step-number {
+            background: #3498db;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .step-command {
+            flex: 1;
+            margin: 0 12px;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .step-type {
+            font-size: 0.7em;
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-run {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .btn-debug {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn-analyze {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .world {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 3px;
+            background: #2c3e50;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 420px;
+        }
+
+        .cell {
+            background: #34495e;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2em;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .cell.grass { background: #27ae60; }
+        .cell.goal { 
+            background: #f39c12; 
+            animation: glow-goal 1.5s infinite alternate;
+        }
+        .cell.gem { 
+            background: #9b59b6; 
+            animation: sparkle 1s infinite;
+        }
+        .cell.wall { background: #8b4513; }
+        .cell.danger { 
+            background: #e74c3c; 
+            animation: pulse-danger 1s infinite;
+        }
+        .cell.sensor {
+            background: #3498db;
+            animation: sensor-pulse 2s infinite;
+        }
+
+        @keyframes glow-goal {
+            from { box-shadow: 0 0 10px #f39c12; }
+            to { box-shadow: 0 0 20px #f39c12, 0 0 30px #f39c12; }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        @keyframes pulse-danger {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes sensor-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+
+        .robot {
+            font-size: 2.8em;
+            animation: robotBob 2s infinite;
+            z-index: 10;
+        }
+
+        @keyframes robotBob {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(3deg); }
+        }
+
+        .robot.moving {
+            animation: robotMove 0.6s ease-in-out;
+        }
+
+        @keyframes robotMove {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3) rotate(15deg); }
+            100% { transform: scale(1); }
+        }
+
+        .execution-panel {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        .execution-status {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .execution-step {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin: 2px 0;
+        }
+
+        .debug-info {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            color: #856404;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .success-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            z-index: 1000;
+            animation: popupShow 0.5s ease-out;
+            max-width: 90vw;
+        }
+
+        @keyframes popupShow {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .concept-explanation {
+            background: #e8f5e8;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .concept-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .empty-program {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px 20px;
+            font-size: 1.1em;
+        }
+
+        .variable-display {
+            background: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .game-board {
+                flex-direction: column;
+            }
+            .controls-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 3px solid #e9ecef;
+                order: 2;
+            }
+            .world-panel {
+                order: 1;
+                padding: 20px;
+            }
+            .world {
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                min-height: 300px;
+            }
+            .stats {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .header h1 {
+                font-size: 2.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🧠 CodeLogic Quest</h1>
+            <p class="subtitle">Fundamentos de Lógica Computacional y Algoritmos</p>
+        </div>
+
+        <div class="game-board">
+            <div class="controls-panel">
+                <div class="level-info">
+                    <h2 id="level-title">🎯 Nivel 1: Secuencias Algorítmicas</h2>
+                    <p id="level-description">Programa secuencias básicas de instrucciones para resolver problemas computacionales</p>
+                    <div id="concept-badges"></div>
+                </div>
+
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="level-num">1</div>
+                        <div class="stat-label">Nivel</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="complexity-score">0</div>
+                        <div class="stat-label">Complejidad</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="steps-count">0</div>
+                        <div class="stat-label">Instrucciones</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="efficiency-score">100</div>
+                        <div class="stat-label">Eficiencia %</div>
+                    </div>
+                </div>
+
+                <div class="commands-section">
+                    <h3 class="section-title">💻 Instrucciones Disponibles</h3>
+                    
+                    <div class="command-category">
+                        <div class="category-label">Movimiento Básico</div>
+                        <button class="command-btn cmd-basic" onclick="addCommand('move-right')">
+                            ➡️ mover_derecha()
+                        </button>
+                        <button class="command-btn cmd-basic" onclick="addCommand('move-down')">
+                            ⬇️ mover_abajo()
+                        </button>
+                        <button class="command-btn cmd-basic" onclick="addCommand('move-left')">
+                            ⬅️ mover_izquierda()
+                        </button>
+                        <button class="command-btn cmd-basic" onclick="addCommand('move-up')">
+                            ⬆️ mover_arriba()
+                        </button>
+                    </div>
+
+                    <div class="command-category" id="conditional-commands" style="display: none;">
+                        <div class="category-label">Estructuras Condicionales</div>
+                        <button class="command-btn cmd-conditional" onclick="addCommand('if-wall')">
+                            🤔 if (hay_pared()) girar_derecha()
+                        </button>
+                        <button class="command-btn cmd-conditional" onclick="addCommand('if-gem')">
+                            💎 if (hay_gema()) recoger()
+                        </button>
+                        <button class="command-btn cmd-conditional" onclick="addCommand('if-danger')">
+                            🔥 if (hay_peligro()) retroceder()
+                        </button>
+                    </div>
+
+                    <div class="command-category" id="loop-commands" style="display: none;">
+                        <div class="category-label">Estructuras Iterativas</div>
+                        <button class="command-btn cmd-loop" onclick="addCommand('while-not-goal')">
+                            🔄 while (!en_objetivo()) avanzar()
+                        </button>
+                        <button class="command-btn cmd-loop" onclick="addCommand('for-3')">
+                            🔁 for (i=0; i&lt;3; i++) mover_derecha()
+                        </button>
+                        <button class="command-btn cmd-loop" onclick="addCommand('repeat-until')">
+                            ♻️ do { } while (condicion)
+                        </button>
+                    </div>
+
+                    <div class="command-category" id="function-commands" style="display: none;">
+                        <div class="category-label">Funciones y Procedimientos</div>
+                        <button class="command-btn cmd-function" onclick="addCommand('function-explore')">
+                            📋 explorar_area()
+                        </button>
+                        <button class="command-btn cmd-function" onclick="addCommand('function-collect')">
+                            🎯 recoger_todos_items()
+                        </button>
+                    </div>
+                </div>
+
+                <div class="program-area">
+                    <div class="program-header">
+                        <div class="program-title">📝 Algoritmo Principal</div>
+                        <div class="complexity-meter">
+                            <span style="font-size: 0.8em; margin-right: 5px;">Complejidad:</span>
+                            <div class="complexity-dot" id="dot1"></div>
+                            <div class="complexity-dot" id="dot2"></div>
+                            <div class="complexity-dot" id="dot3"></div>
+                            <div class="complexity-dot" id="dot4"></div>
+                            <div class="complexity-dot" id="dot5"></div>
+                        </div>
+                    </div>
+                    <div id="program-list">
+                        <div class="empty-program">
+                            <code>// Construye tu algoritmo aquí<br>
+                            // Haz clic en las instrucciones de arriba ✨</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn btn-run" onclick="runProgram()">
+                        ▶️ EJECUTAR
+                    </button>
+                    <button class="action-btn btn-debug" onclick="debugProgram()">
+                        🐛 DEBUG
+                    </button>
+                    <button class="action-btn btn-analyze" onclick="analyzeAlgorithm()">
+                        📊 ANALIZAR
+                    </button>
+                    <button class="action-btn btn-clear" onclick="clearProgram()">
+                        🗑️ LIMPIAR
+                    </button>
+                </div>
+
+                <div id="debug-area"></div>
+            </div>
+
+            <div class="world-panel">
+                <div class="execution-panel">
+                    <div class="execution-status" id="execution-status">⏸️ Sistema en espera</div>
+                    <div id="execution-log"></div>
+                    <div id="variables-display"></div>
+                </div>
+                
+                <div class="world" id="world"></div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="resetLevel()" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white;">
+                        🔄 REINICIAR
+                    </button>
+                    <button class="action-btn btn-run" onclick="nextLevel()" id="next-btn" style="display: none;">
+                        ➡️ SIGUIENTE NIVEL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado del juego
+        let currentLevel = 1;
+        let program = [];
+        let robotPos = { x: 0, y: 0 };
+        let isRunning = false;
+        let isDebugging = false;
+        let gemsCollected = 0;
+        let stepsCount = 0;
+        let complexityScore = 0;
+        let efficiency = 100;
+        let executionLog = [];
+        let variables = { gems: 0, steps: 0, position: { x: 0, y: 0 } };
+
+        // Niveles progresivos con conceptos de lógica computacional
+        const levels = {
+            1: {
+                title: "🎯 Nivel 1: Secuencias Algorítmicas",
+                description: "Programa secuencias básicas de instrucciones para resolver problemas computacionales",
+                concepts: ["Secuencias", "Algoritmos", "Instrucciones"],
+                robotStart: { x: 0, y: 0 },
+                goal: { x: 3, y: 0 },
+                gems: [],
+                walls: [],
+                dangers: [],
+                sensors: [],
+                optimalSteps: 3,
+                explanation: "Una secuencia algorítmica es una serie ordenada de instrucciones que resuelven un problema específico. Cada instrucción se ejecuta en orden secuencial.",
+                hint: "💡 Conceptos: Secuencia de instrucciones, ejecución secuencial. Usa 3 veces mover_derecha() para llegar al objetivo."
+            },
+            2: {
+                title: "🎯 Nivel 2: Estructuras de Control",
+                description: "Implementa estructuras condicionales para tomar decisiones algorítmicas",
+                concepts: ["Condicionales", "If-Then", "Toma de decisiones"],
+                robotStart: { x: 0, y: 0 },
+                goal: { x: 3, y: 2 },
+                gems: [{ x: 2, y: 1 }],
+                walls: [{ x: 1, y: 0 }, { x: 2, y: 0 }],
+                dangers: [],
+                sensors: [],
+                optimalSteps: 4,
+                explanation: "Las estructuras condicionales permiten que el algoritmo tome decisiones basadas en condiciones. 'if (condición) entonces acción'",
+                hint: "💡 Conceptos: Condicionales, bifurcación de flujo. Usa if (hay_pared()) para detectar obstáculos y cambiar de ruta."
+            },
+            3: {
+                title: "🎯 Nivel 3: Bucles y Iteración",
+                description: "Utiliza estructuras iterativas para optimizar algoritmos repetitivos",
+                concepts: ["Bucles", "While", "For", "Iteración"],
+                robotStart: { x: 0, y: 0 },
+                goal: { x: 6, y: 0 },
+                gems: [{ x: 2, y: 0 }, { x: 4, y: 0 }],
+                walls: [],
+                dangers: [{ x: 1, y: 0 }, { x: 3, y: 0 }, { x: 5, y: 0 }],
+                sensors: [],
+                optimalSteps: 2,
+                explanation: "Los bucles permiten repetir instrucciones eficientemente. 'while (condición)' ejecuta mientras la condición sea verdadera.",
+                hint: "💡 Conceptos: Iteración, bucles, optimización. Usa for (i=0; i<3; i++) para repetir movimientos eficientemente."
+            },
+            4: {
+                title: "🎯 Nivel 4: Funciones y Modularidad",
+                description: "Diseña funciones reutilizables para resolver subproblemas complejos",
+                concepts: ["Funciones", "Modularidad", "Reutilización"],
+                robotStart: { x: 0, y: 0 },
+                goal: { x: 4, y: 3 },
+                gems: [{ x: 1, y: 1 }, { x: 3, y: 2 }, { x: 5, y: 1 }, { x: 6, y: 4 }],
+                walls: [{ x: 2, y: 1 }, { x: 3, y: 3 }, { x: 4, y: 2 }, { x: 1, y: 4 }],
+                dangers: [{ x: 2, y: 3 }, { x: 4, y: 4 }],
+                sensors: [{ x: 1, y: 0 }, { x: 3, y: 1 }, { x: 5, y: 3 }],
+                optimalSteps: 4,
+                explanation: "Los algoritmos complejos combinan múltiples estructuras de control para resolver problemas de búsqueda y optimización con restricciones.",
+                hint: "💡 Conceptos: Algoritmos de búsqueda, optimización, análisis de complejidad. Combina funciones, bucles y condicionales para la solución óptima."
+            }
+        };
+
+        // Inicializar juego
+        function initGame() {
+            loadLevel(currentLevel);
+        }
+
+        // Cargar nivel
+        function loadLevel(levelNum) {
+            const level = levels[levelNum];
+            document.getElementById('level-title').textContent = level.title;
+            document.getElementById('level-description').textContent = level.description;
+            document.getElementById('level-num').textContent = levelNum;
+            
+            // Mostrar badges de conceptos
+            const badgesContainer = document.getElementById('concept-badges');
+            badgesContainer.innerHTML = '';
+            level.concepts.forEach(concept => {
+                const badge = document.createElement('span');
+                badge.className = 'concept-badge';
+                badge.textContent = concept;
+                badgesContainer.appendChild(badge);
+            });
+            
+            // Mostrar comandos según el nivel
+            showAvailableCommands(levelNum);
+            
+            robotPos = { ...level.robotStart };
+            gemsCollected = 0;
+            stepsCount = 0;
+            complexityScore = 0;
+            efficiency = 100;
+            program = [];
+            executionLog = [];
+            variables = { gems: 0, steps: 0, position: { ...robotPos } };
+            
+            updateStats();
+            drawWorld();
+            updateProgramDisplay();
+            clearDebugInfo();
+            updateExecutionStatus("⏸️ Sistema en espera");
+            
+            document.getElementById('next-btn').style.display = 'none';
+        }
+
+        // Mostrar comandos disponibles según el nivel
+        function showAvailableCommands(level) {
+            document.getElementById('conditional-commands').style.display = level >= 2 ? 'block' : 'none';
+            document.getElementById('loop-commands').style.display = level >= 3 ? 'block' : 'none';
+            document.getElementById('function-commands').style.display = level >= 4 ? 'block' : 'none';
+        }
+
+        // Dibujar mundo
+        function drawWorld() {
+            const world = document.getElementById('world');
+            world.innerHTML = '';
+            
+            const level = levels[currentLevel];
+            
+            for (let y = 0; y < 6; y++) {
+                for (let x = 0; x < 8; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell grass';
+                    
+                    // Añadir elementos especiales
+                    if (x === level.goal.x && y === level.goal.y) {
+                        cell.className = 'cell goal';
+                        cell.innerHTML = '🎯';
+                    } else if (level.walls.some(w => w.x === x && w.y === y)) {
+                        cell.className = 'cell wall';
+                        cell.innerHTML = '🧱';
+                    } else if (level.dangers.some(d => d.x === x && d.y === y)) {
+                        cell.className = 'cell danger';
+                        cell.innerHTML = '⚠️';
+                    } else if (level.gems.some(g => g.x === x && g.y === y)) {
+                        cell.className = 'cell gem';
+                        cell.innerHTML = '💎';
+                    } else if (level.sensors.some(s => s.x === x && s.y === y)) {
+                        cell.className = 'cell sensor';
+                        cell.innerHTML = '📡';
+                    }
+                    
+                    // Añadir robot
+                    if (x === robotPos.x && y === robotPos.y) {
+                        const robot = document.createElement('div');
+                        robot.className = 'robot';
+                        robot.innerHTML = '🤖';
+                        cell.appendChild(robot);
+                    }
+                    
+                    world.appendChild(cell);
+                }
+            }
+        }
+
+        // Agregar comando al programa
+        function addCommand(command) {
+            program.push(command);
+            calculateComplexity();
+            updateProgramDisplay();
+            
+            // Efecto visual en el botón
+            const btn = event.target;
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 150);
+        }
+
+        // Calcular complejidad del algoritmo
+        function calculateComplexity() {
+            complexityScore = 0;
+            program.forEach(cmd => {
+                if (cmd.includes('move-')) complexityScore += 1;
+                else if (cmd.includes('if-')) complexityScore += 2;
+                else if (cmd.includes('while') || cmd.includes('for')) complexityScore += 3;
+                else if (cmd.includes('function-')) complexityScore += 4;
+            });
+            
+            // Actualizar medidor de complejidad
+            for (let i = 1; i <= 5; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                dot.classList.toggle('active', i <= Math.min(5, Math.ceil(complexityScore / 2)));
+            }
+            
+            updateStats();
+        }
+
+        // Actualizar display del programa
+        function updateProgramDisplay() {
+            const programList = document.getElementById('program-list');
+            
+            if (program.length === 0) {
+                programList.innerHTML = '<div class="empty-program"><code>// Construye tu algoritmo aquí<br>// Haz clic en las instrucciones de arriba ✨</code></div>';
+                return;
+            }
+            
+            programList.innerHTML = '';
+            
+            program.forEach((command, index) => {
+                const step = document.createElement('div');
+                step.className = `program-step ${getCommandType(command)}`;
+                
+                const stepNum = document.createElement('div');
+                stepNum.className = 'step-number';
+                stepNum.textContent = index + 1;
+                
+                const stepContent = document.createElement('div');
+                stepContent.style.flex = '1';
+                stepContent.style.margin = '0 12px';
+                
+                const stepCmd = document.createElement('div');
+                stepCmd.className = 'step-command';
+                stepCmd.innerHTML = getCommandText(command);
+                
+                const stepType = document.createElement('div');
+                stepType.className = 'step-type';
+                stepType.textContent = getCommandTypeText(command);
+                
+                stepContent.appendChild(stepCmd);
+                stepContent.appendChild(stepType);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = () => removeCommand(index);
+                
+                step.appendChild(stepNum);
+                step.appendChild(stepContent);
+                step.appendChild(deleteBtn);
+                
+                programList.appendChild(step);
+            });
+        }
+
+        // Obtener tipo de comando
+        function getCommandType(command) {
+            if (command.includes('if-')) return 'conditional';
+            if (command.includes('while') || command.includes('for') || command.includes('repeat')) return 'loop';
+            if (command.includes('function-')) return 'function';
+            return '';
+        }
+
+        // Obtener texto del tipo de comando
+        function getCommandTypeText(command) {
+            if (command.includes('if-')) return 'condicional';
+            if (command.includes('while')) return 'bucle while';
+            if (command.includes('for')) return 'bucle for';
+            if (command.includes('repeat')) return 'bucle do-while';
+            if (command.includes('function-')) return 'función';
+            return 'instrucción básica';
+        }
+
+        // Obtener texto del comando
+        function getCommandText(command) {
+            const texts = {
+                'move-right': '<code>mover_derecha()</code>',
+                'move-down': '<code>mover_abajo()</code>',
+                'move-left': '<code>mover_izquierda()</code>',
+                'move-up': '<code>mover_arriba()</code>',
+                'if-wall': '<code>if (hay_pared()) girar_derecha()</code>',
+                'if-gem': '<code>if (hay_gema()) recoger()</code>',
+                'if-danger': '<code>if (hay_peligro()) retroceder()</code>',
+                'while-not-goal': '<code>while (!en_objetivo()) avanzar()</code>',
+                'for-3': '<code>for (i=0; i&lt;3; i++) mover_derecha()</code>',
+                'repeat-until': '<code>do { mover() } while (!libre())</code>',
+                'function-explore': '<code>explorar_area()</code>',
+                'function-collect': '<code>recoger_todos_items()</code>'
+            };
+            return texts[command] || command;
+        }
+
+        // Remover comando
+        function removeCommand(index) {
+            program.splice(index, 1);
+            calculateComplexity();
+            updateProgramDisplay();
+        }
+
+        // Limpiar programa
+        function clearProgram() {
+            program = [];
+            complexityScore = 0;
+            calculateComplexity();
+            updateProgramDisplay();
+        }
+
+        // Ejecutar programa
+        async function runProgram() {
+            if (isRunning || program.length === 0) {
+                if (program.length === 0) {
+                    alert('🤖 ¡Primero construye tu algoritmo agregando instrucciones!');
+                }
+                return;
+            }
+            
+            isRunning = true;
+            stepsCount = 0;
+            executionLog = [];
+            updateExecutionStatus("▶️ Ejecutando algoritmo...");
+            
+            for (let i = 0; i < program.length; i++) {
+                updateExecutionStatus(`▶️ Ejecutando paso ${i + 1}: ${getCommandText(program[i]).replace(/<\/?code>/g, '')}`);
+                await executeCommand(program[i]);
+                await sleep(800);
+                
+                if (checkWin()) {
+                    showSuccess();
+                    break;
+                }
+                
+                if (checkGameOver()) {
+                    updateExecutionStatus("❌ Error: El robot encontró un obstáculo o peligro");
+                    alert('💥 ¡Error de ejecución! El robot encontró un obstáculo. Analiza tu algoritmo e inténtalo de nuevo.');
+                    break;
+                }
+            }
+            
+            isRunning = false;
+            if (!checkWin() && !checkGameOver()) {
+                updateExecutionStatus("⏸️ Ejecución completada - Objetivo no alcanzado");
+            }
+        }
+
+        // Ejecutar un comando
+        async function executeCommand(command) {
+            const robot = document.querySelector('.robot');
+            if (robot) robot.classList.add('moving');
+            
+            let executed = false;
+            
+            switch (command) {
+                case 'move-right':
+                    executed = await moveRobotDirection(1, 0);
+                    logExecution(`mover_derecha() -> Posición: (${robotPos.x}, ${robotPos.y})`);
+                    break;
+                case 'move-down':
+                    executed = await moveRobotDirection(0, 1);
+                    logExecution(`mover_abajo() -> Posición: (${robotPos.x}, ${robotPos.y})`);
+                    break;
+                case 'move-left':
+                    executed = await moveRobotDirection(-1, 0);
+                    logExecution(`mover_izquierda() -> Posición: (${robotPos.x}, ${robotPos.y})`);
+                    break;
+                case 'move-up':
+                    executed = await moveRobotDirection(0, -1);
+                    logExecution(`mover_arriba() -> Posición: (${robotPos.x}, ${robotPos.y})`);
+                    break;
+                case 'if-wall':
+                    if (isWallAhead()) {
+                        logExecution("if (hay_pared()) -> VERDADERO, ejecutando girar_derecha()");
+                        // Simulación de giro
+                        await sleep(200);
+                    } else {
+                        logExecution("if (hay_pared()) -> FALSO, continuando");
+                    }
+                    executed = true;
+                    break;
+                case 'if-gem':
+                    if (isGemHere()) {
+                        collectGem();
+                        logExecution("if (hay_gema()) -> VERDADERO, gema recolectada");
+                    } else {
+                        logExecution("if (hay_gema()) -> FALSO, continuando");
+                    }
+                    executed = true;
+                    break;
+                case 'for-3':
+                    logExecution("for (i=0; i<3; i++) iniciando bucle...");
+                    for (let j = 0; j < 3; j++) {
+                        await moveRobotDirection(1, 0);
+                        logExecution(`  Iteración ${j+1}: mover_derecha()`);
+                        await sleep(300);
+                    }
+                    logExecution("Bucle for completado");
+                    executed = true;
+                    break;
+                case 'while-not-goal':
+                    logExecution("while (!en_objetivo()) iniciando...");
+                    let iterations = 0;
+                    while (!checkWin() && iterations < 10) {
+                        await moveRobotDirection(1, 0);
+                        logExecution(`  Iteración ${iterations+1}: avanzar()`);
+                        iterations++;
+                        await sleep(300);
+                        if (checkWin()) break;
+                    }
+                    logExecution("Bucle while completado");
+                    executed = true;
+                    break;
+                case 'function-explore':
+                    logExecution("explorar_area() -> Ejecutando algoritmo de exploración");
+                    // Simulación de exploración inteligente
+                    for (let move of ['move-right', 'move-down', 'move-right']) {
+                        await executeCommand(move);
+                        await sleep(200);
+                    }
+                    executed = true;
+                    break;
+                case 'function-collect':
+                    logExecution("recoger_todos_items() -> Buscando y recolectando items");
+                    // Simulación de recolección
+                    if (isGemHere()) collectGem();
+                    executed = true;
+                    break;
+            }
+            
+            variables.position = { ...robotPos };
+            variables.steps = stepsCount;
+            variables.gems = gemsCollected;
+            updateVariablesDisplay();
+            updateStats();
+            drawWorld();
+            
+            setTimeout(() => {
+                const robot = document.querySelector('.robot');
+                if (robot) robot.classList.remove('moving');
+            }, 500);
+            
+            return executed;
+        }
+
+        // Mover robot en una dirección específica
+        async function moveRobotDirection(deltaX, deltaY) {
+            const newX = robotPos.x + deltaX;
+            const newY = robotPos.y + deltaY;
+            
+            const level = levels[currentLevel];
+            if (newX >= 0 && newX < 8 && newY >= 0 && newY < 6 && 
+                !level.walls.some(w => w.x === newX && w.y === newY)) {
+                
+                robotPos.x = newX;
+                robotPos.y = newY;
+                stepsCount++;
+                
+                // Recoger gemas automáticamente
+                const gemIndex = level.gems.findIndex(g => g.x === newX && g.y === newY);
+                if (gemIndex !== -1) {
+                    level.gems.splice(gemIndex, 1);
+                    gemsCollected++;
+                }
+                
+                return true;
+            }
+            return false;
+        }
+
+        // Funciones auxiliares
+        function isWallAhead() {
+            const level = levels[currentLevel];
+            return level.walls.some(w => w.x === robotPos.x + 1 && w.y === robotPos.y);
+        }
+
+        function isGemHere() {
+            const level = levels[currentLevel];
+            return level.gems.some(g => g.x === robotPos.x && g.y === robotPos.y);
+        }
+
+        function collectGem() {
+            const level = levels[currentLevel];
+            const gemIndex = level.gems.findIndex(g => g.x === robotPos.x && g.y === robotPos.y);
+            if (gemIndex !== -1) {
+                level.gems.splice(gemIndex, 1);
+                gemsCollected++;
+            }
+        }
+
+        // Logging y debugging
+        function logExecution(message) {
+            executionLog.push(message);
+            const logDiv = document.getElementById('execution-log');
+            logDiv.innerHTML = executionLog.slice(-3).map(log => 
+                `<div class="execution-step">${log}</div>`
+            ).join('');
+        }
+
+        function updateExecutionStatus(status) {
+            document.getElementById('execution-status').textContent = status;
+        }
+
+        function updateVariablesDisplay() {
+            const varDiv = document.getElementById('variables-display');
+            varDiv.innerHTML = `
+                <span class="variable-display">x: ${variables.position.x}</span>
+                <span class="variable-display">y: ${variables.position.y}</span>
+                <span class="variable-display">gemas: ${variables.gems}</span>
+                <span class="variable-display">pasos: ${variables.steps}</span>
+            `;
+        }
+
+        // Debugging del programa
+        function debugProgram() {
+            const debugArea = document.getElementById('debug-area');
+            const level = levels[currentLevel];
+            
+            const analysis = analyzeAlgorithmComplexity();
+            
+            debugArea.innerHTML = `
+                <div class="debug-info">
+                    <div class="concept-title">🐛 Análisis de Debug</div>
+                    <p><strong>Complejidad temporal:</strong> O(${analysis.complexity})</p>
+                    <p><strong>Número de instrucciones:</strong> ${program.length}</p>
+                    <p><strong>Pasos óptimos:</strong> ${level.optimalSteps}</p>
+                    <p><strong>Eficiencia estimada:</strong> ${Math.max(0, 100 - (program.length - level.optimalSteps) * 10)}%</p>
+                    <p><strong>Estructuras utilizadas:</strong> ${getUsedStructures().join(', ')}</p>
+                </div>
+            `;
+        }
+
+        // Analizar algoritmo
+        function analyzeAlgorithm() {
+            const level = levels[currentLevel];
+            const analysis = analyzeAlgorithmComplexity();
+            
+            const debugArea = document.getElementById('debug-area');
+            debugArea.innerHTML = `
+                <div class="concept-explanation">
+                    <div class="concept-title">📊 Análisis Algorítmico</div>
+                    <p><strong>Concepto:</strong> ${level.explanation}</p>
+                    <p><strong>Complejidad:</strong> ${analysis.description}</p>
+                    <p><strong>Optimización:</strong> ${getOptimizationSuggestion()}</p>
+                </div>
+            `;
+        }
+
+        function analyzeAlgorithmComplexity() {
+            let hasLoops = program.some(cmd => cmd.includes('while') || cmd.includes('for'));
+            let hasConditionals = program.some(cmd => cmd.includes('if-'));
+            let hasFunctions = program.some(cmd => cmd.includes('function-'));
+            
+            if (hasFunctions) return { complexity: 'f(n)', description: 'Complejidad funcional - depende de la implementación interna' };
+            if (hasLoops) return { complexity: 'n', description: 'Complejidad lineal - tiempo proporcional al tamaño del problema' };
+            if (hasConditionals) return { complexity: '1', description: 'Complejidad constante con bifurcaciones - tiempo fijo con decisiones' };
+            return { complexity: '1', description: 'Complejidad constante - tiempo de ejecución fijo' };
+        }
+
+        function getUsedStructures() {
+            let structures = [];
+            if (program.some(cmd => cmd.includes('move-'))) structures.push('Secuencias');
+            if (program.some(cmd => cmd.includes('if-'))) structures.push('Condicionales');
+            if (program.some(cmd => cmd.includes('while') || cmd.includes('for'))) structures.push('Bucles');
+            if (program.some(cmd => cmd.includes('function-'))) structures.push('Funciones');
+            return structures.length > 0 ? structures : ['Ninguna'];
+        }
+
+        function getOptimizationSuggestion() {
+            const level = levels[currentLevel];
+            if (program.length > level.optimalSteps + 2) {
+                return "Considera usar bucles o funciones para reducir repetición de código";
+            } else if (program.length === level.optimalSteps) {
+                return "¡Algoritmo óptimo! Excelente eficiencia";
+            } else {
+                return "Buen algoritmo, muy cerca del óptimo";
+            }
+        }
+
+        function clearDebugInfo() {
+            document.getElementById('debug-area').innerHTML = '';
+        }
+
+        // Verificaciones de estado
+        function checkWin() {
+            const level = levels[currentLevel];
+            return robotPos.x === level.goal.x && robotPos.y === level.goal.y;
+        }
+
+        function checkGameOver() {
+            const level = levels[currentLevel];
+            return level.dangers.some(d => d.x === robotPos.x && d.y === robotPos.y);
+        }
+
+        // Mostrar éxito
+        function showSuccess() {
+            const level = levels[currentLevel];
+            const efficiency = Math.max(0, Math.round((level.optimalSteps / Math.max(program.length, 1)) * 100));
+            
+            const popup = document.createElement('div');
+            popup.className = 'success-popup';
+            popup.innerHTML = `
+                <h2>🎉 ¡ALGORITMO EJECUTADO CON ÉXITO!</h2>
+                <div class="concept-explanation">
+                    <div class="concept-title">Conceptos Aplicados</div>
+                    <p>${level.explanation}</p>
+                </div>
+                <p style="font-size: 1.2em; margin: 20px 0;">
+                    📊 <strong>Análisis de Rendimiento:</strong><br>
+                    Eficiencia: ${efficiency}% | Complejidad: ${complexityScore} | Pasos: ${stepsCount}
+                </p>
+                <button class="action-btn btn-run" onclick="closeSuccessAndNext()" style="margin-top: 20px; font-size: 1.1em;">
+                    ${currentLevel < Object.keys(levels).length ? '➡️ SIGUIENTE DESAFÍO' : '🏆 ¡CURSO COMPLETADO!'}
+                </button>
+            `;
+            document.body.appendChild(popup);
+            
+            updateExecutionStatus("✅ Algoritmo ejecutado exitosamente - Objetivo alcanzado");
+            document.getElementById('next-btn').style.display = 'inline-block';
+            
+            setTimeout(() => {
+                if (document.body.contains(popup)) {
+                    popup.remove();
+                }
+            }, 10000);
+        }
+
+        // Cerrar popup y siguiente nivel
+        function closeSuccessAndNext() {
+            const popup = document.querySelector('.success-popup');
+            if (popup) popup.remove();
+            nextLevel();
+        }
+
+        // Siguiente nivel
+        function nextLevel() {
+            if (currentLevel < Object.keys(levels).length) {
+                currentLevel++;
+                loadLevel(currentLevel);
+            } else {
+                alert('🏆 ¡FELICITACIONES! Has completado todos los desafíos de Lógica Computacional. Estás listo para Ingeniería de Software!');
+            }
+        }
+
+        // Reiniciar nivel
+        function resetLevel() {
+            loadLevel(currentLevel);
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            document.getElementById('complexity-score').textContent = complexityScore;
+            document.getElementById('steps-count').textContent = program.length;
+            
+            const level = levels[currentLevel];
+            const efficiency = program.length > 0 ? Math.max(0, Math.round((level.optimalSteps / program.length) * 100)) : 100;
+            document.getElementById('efficiency-score').textContent = efficiency;
+        }
+
+        // Función de espera
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Inicializar juego al cargar
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>, y: 2 }, { x: 2, y: 3 }],
+                walls: [{ x: 2, y: 1 }, { x: 3, y: 1 }],
+                dangers: [{ x: 1, y: 2 }],
+                sensors: [{ x: 2, y: 0 }, { x: 0, y: 2 }],
+                optimalSteps: 3,
+                explanation: "Las funciones encapsulan algoritmos específicos que pueden reutilizarse. Permiten dividir problemas complejos en subproblemas más simples.",
+                hint: "💡 Conceptos: Modularidad, abstracción, reutilización. Usa explorar_area() y recoger_todos_items() para simplificar el algoritmo."
+            },
+            5: {
+                title: "🎯 Nivel 5: Algoritmos Complejos",
+                description: "Combina todos los conceptos para resolver problemas de búsqueda y optimización",
+                concepts: ["Búsqueda", "Optimización", "Complejidad", "Análisis"],
+                robotStart: { x: 0, y: 0 },
+                goal: { x: 7, y: 5 },
+                gems: [{ x: 1, y: 1 }, { x: 3
